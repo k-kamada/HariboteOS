@@ -2,6 +2,7 @@
 ; TAB=4
 
   ORG   0x7c00			; where to load this program
+  CYLS  EQU 10      ; cylinder number (max)
 
 ; FAT12 Floppy
 
@@ -34,6 +35,50 @@ entry:
   MOV   SP, 0x7c00
   MOV   DS, AX
   MOV   ES, AX
+
+; Read Disk
+  MOV   AX, 0x0820
+  MOV   ES, AX
+  MOV   CH, 0     ; Cylinder 0
+  MOV   DH, 0     ; Head 0
+  MOV   CL, 2     ; Sector 2 (2nd: not 3rd)
+readloop:
+  MOV   SI, 0     ; register for counting errors
+retry:
+  MOV   AH, 0x02  ; read disk
+  MOV   AL, 1     ; 1 sector
+  MOV   BX, 0
+  MOV   DL, 0x00  ; A drive
+  INT   0x13      ; call disk bios
+  JNC   next
+  ADD   SI, 1
+  CMP   SI, 5
+  JAE   error     ; Jump if Above or Equel
+  MOV   AH, 0x00
+  MOV   DL, 0x00
+  INT   0x13      ; reset drive
+  JMP   retry
+next:
+  MOV   AX, ES    ; advance ES adrress 0x20
+  ADD   AX, 0x0020
+  MOV   ES, AX
+  ADD   CL, 1
+  CMP   CL, 18
+  JBE   readloop  ; Jump if Below or Equal
+  MOV   CL, 1
+  ADD   DH, 1
+  CMP   DH, 2
+  JB    readloop
+  MOV   DH, 0
+  ADD   CH, 1
+  CMP   CH, CYLS
+  JB    readloop
+
+fin:
+  HLT
+  JMP   fin
+
+error:
   MOV   SI, msg
 
 putloop:
@@ -45,10 +90,6 @@ putloop:
   MOV   BX, 15
   INT   0x10
   JMP   putloop
-
-fin:
-  HLT
-  JMP   fin
 
 msg:
   DB    0x0a, 0x0a
