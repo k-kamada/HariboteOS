@@ -34,6 +34,7 @@ entry:
   MOV   SP, 0x7c00
   MOV   DS, AX
   MOV   ES, AX
+  MOV   SI, msg
 
 putloop:
   MOV   AL, [SI]
