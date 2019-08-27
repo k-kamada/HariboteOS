@@ -6,7 +6,7 @@
 
 ; FAT12 Floppy
 
-  JMP   entry       ; BS_JmpBoot
+  JMP   SHORT entry ; BS_JmpBoot
   DB    0x90
   DB    "HELLOIPL"  ; BS_OEMName      : boot sector name
   DW    512         ; BPB_BytesPerSec : 1 sector size
